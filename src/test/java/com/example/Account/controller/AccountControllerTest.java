@@ -3,10 +3,10 @@ package com.example.Account.controller;
 import com.example.Account.domain.Account;
 import com.example.Account.dto.AccountDto;
 import com.example.Account.dto.CreateAccount;
+import com.example.Account.dto.DeleteAccount;
 import com.example.Account.type.AccountStatus;
 import com.example.Account.service.AccountService;
 import com.example.Account.service.RedisTestService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,7 +47,7 @@ class AccountControllerTest {
                         .userId(1L)
                         .accountNumber("123456789")
                         .registeredAt(LocalDateTime.now())
-                        .unRegisteredAt(LocalDateTime.now())
+                        .unregisteredAt(LocalDateTime.now())
                         .build());
         //when
         //then
@@ -77,5 +77,28 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.accountNumber").value("3456"))
                 .andExpect(jsonPath("$.accountStatus").value("IN_USE"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void successDeleteAccount() throws Exception {
+        //given
+        given(accountService.deleteAccount(anyLong(), anyString()))
+                .willReturn(AccountDto.builder()
+                        .userId(1L)
+                        .accountNumber("1234567890")
+                        .registeredAt(LocalDateTime.now())
+                        .unregisteredAt(LocalDateTime.now())
+                        .build());
+        //when
+        //then
+        mockMvc.perform(delete("/account")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new DeleteAccount.Request(3333L, "1111111111")
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(1L))
+                .andExpect(jsonPath("$.accountNumber").value("1234567890"))
+                .andDo(print());
     }
 }
